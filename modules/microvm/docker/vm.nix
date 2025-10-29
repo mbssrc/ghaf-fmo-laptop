@@ -11,6 +11,11 @@
   docker = {
     enable = true;
     borderColor = "#000000";
+    vtpm = {
+      enable = true;
+      runInVM = config.ghaf.virtualization.storagevm-encryption.enable;
+      basePort = 9200;
+    };
     applications = [
       # TODO this is largely untested
       {

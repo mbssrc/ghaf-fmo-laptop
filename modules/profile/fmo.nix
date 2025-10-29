@@ -58,6 +58,9 @@ in
         };
       };
 
+      # Enable storagevm encryption
+      virtualization.storagevm-encryption.enable = true;
+
       # Enable logging
       logging = {
         enable = false;

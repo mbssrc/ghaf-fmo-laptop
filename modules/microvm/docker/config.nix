@@ -4,11 +4,14 @@
 {
   config,
   pkgs,
+  lib,
   ...
 }:
 let
   hostConfig = config;
+  inherit (lib) mkForce;
   appuser = config.ghaf.users.appUser.name;
+  inherit (config.microvm.vms.docker-vm.config.config.ghaf.storagevm) mountPath;
 in
 {
   # TODO implement appvm interface and remove these imports
@@ -34,10 +37,15 @@ in
 
     # MTU
     systemd.network.links."10-ethint0".extraConfig = "MTUBytes=1372";
+
+    # Storage VM configuration
     ghaf.storagevm = {
       enable = true;
       name = "docker-vm";
-      encryption.enable = hostConfig.ghaf.virtualization.storagevm-encryption.enable;
+      encryption = {
+        enable = mkForce hostConfig.ghaf.virtualization.storagevm-encryption.enable;
+        initialDiskSize = 200 * 1024; # Size in MB, we give docker-vm 200 GB
+      };
       directories = [
         {
           directory = "/var/lib/internal";
@@ -49,10 +57,16 @@ in
           directory = "/var/lib/docker";
           user = "root";
           group = "root";
-          mode = "0710";
+          mode = "0770";
         }
       ];
     };
+
+    # Adjust storagevm permissions for docker
+    fileSystems."${mountPath}".options = mkForce [
+      "rw"
+      "relatime"
+    ];
 
     # MicroVM
     microvm = {
